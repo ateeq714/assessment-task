@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Merchant;
 use App\Services\MerchantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,9 +9,12 @@ use Illuminate\Support\Carbon;
 
 class MerchantController extends Controller
 {
-    public function __construct(
-        MerchantService $merchantService
-    ) {}
+    private $merchantService;
+
+    public function __construct(MerchantService $merchantService)
+    {
+        $this->merchantService = $merchantService;
+    }
 
     /**
      * Useful order statistics for the merchant API.
@@ -22,6 +24,18 @@ class MerchantController extends Controller
      */
     public function orderStats(Request $request): JsonResponse
     {
-        // TODO: Complete this method
+        $request->validate([
+            'from' => 'required|date',
+            'to' => 'required|date|after_or_equal:from',
+        ]);
+
+        $fromDate = Carbon::parse($request->input('from'));
+        $toDate = Carbon::parse($request->input('to'));
+
+        $merchant = auth()->user()->merchant;
+
+        $orderStats = $this->merchantService->getOrderStats($merchant, $fromDate, $toDate);
+
+        return response()->json($orderStats);
     }
 }

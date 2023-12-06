@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AffiliateCreateException;
 use App\Models\Affiliate;
 use App\Models\Merchant;
 use Illuminate\Support\Str;
@@ -38,5 +39,32 @@ class ApiService
     public function sendPayout(string $email, float $amount)
     {
         //
+    }
+
+    /**
+     * Create a new affiliate for the merchant with the given discount code.
+     *
+     * @param Merchant $merchant
+     * @param string $discountCode
+     * @return Affiliate
+     * @throws AffiliateCreateException
+     */
+    public function createAffiliate(Merchant $merchant, string $discountCode): Affiliate
+    {
+        $commissionRate = 0.1;
+
+        $affiliateCode = Str::uuid();
+
+        $affiliate = Affiliate::create([
+            'merchant_id' => $merchant->id,
+            'discount_code' => $discountCode,
+            'commission_rate' => $commissionRate,
+        ]);
+
+        if (!$affiliate) {
+            throw new AffiliateCreateException("Failed to create affiliate for merchant {$merchant->id}");
+        }
+
+        return $affiliate;
     }
 }
